@@ -47,6 +47,18 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        countdown: {
+          DEFAULT: "hsl(var(--countdown-bg))",
+          foreground: "hsl(var(--countdown-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        price: {
+          DEFAULT: "hsl(var(--price))",
+          old: "hsl(var(--price-old))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
