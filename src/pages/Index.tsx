@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2, ShieldCheck } from "lucide-react";
 import CountdownTimer from "@/components/CountdownTimer";
 import QuantitySelector from "@/components/QuantitySelector";
@@ -13,11 +12,12 @@ import productBanner from "@/assets/product-banner.png";
 import confirmationImg from "@/assets/confirmation.jpg";
 
 const UNIT_PRICE = 39.90;
+const ATOMOPAY_CHECKOUT_URL = "https://go.atomopay.com.br/dolhnb05tc";
 
 const Index = () => {
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
-  const [step, setStep] = useState<"checkout" | "pix" | "confirmed">("checkout");
+  const [step, setStep] = useState<"checkout" | "payment" | "confirmed">("checkout");
 
   // Customer
   const [name, setName] = useState("");
@@ -34,20 +34,10 @@ const Index = () => {
   // Shipping
   const [shipping, setShipping] = useState("");
 
-  // Payment
-  const [loading, setLoading] = useState(false);
-  const [pixData, setPixData] = useState<{
-    qr_code?: string;
-    qr_code_base64?: string;
-    copy_paste?: string;
-    pix_code?: string;
-    [key: string]: unknown;
-  } | null>(null);
-
   const shippingCost = shipping === "sedex" ? 35.67 : shipping === "pac" ? 23.94 : 0;
   const total = quantity * UNIT_PRICE + shippingCost;
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!name || !email || !whatsapp) {
       toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
       return;
@@ -61,29 +51,9 @@ const Index = () => {
       return;
     }
 
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-pix", {
-        body: {
-          name,
-          email,
-          whatsapp,
-          cpf: cpf || undefined,
-          amount: Math.round(total * 100),
-          quantity,
-        },
-      });
-
-      if (error) throw error;
-
-      setPixData(data);
-      setStep("pix");
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : "Erro ao gerar pagamento";
-      toast({ title: errorMsg, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+    // Open AtomoPay checkout in new tab
+    window.open(ATOMOPAY_CHECKOUT_URL, "_blank");
+    setStep("payment");
   };
 
   if (step === "confirmed") {
@@ -96,55 +66,34 @@ const Index = () => {
     );
   }
 
-  if (step === "pix") {
-    const pixCode = pixData?.pix_code || pixData?.copy_paste || pixData?.qr_code || "";
+  if (step === "payment") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-card rounded-2xl shadow-lg p-6 space-y-5">
-          <h2 className="text-xl font-bold text-center">Pagamento via PIX</h2>
-
-          {pixData?.qr_code_base64 && (
-            <img
-              src={`data:image/png;base64,${pixData.qr_code_base64}`}
-              alt="QR Code PIX"
-              className="mx-auto w-48 h-48"
-            />
-          )}
-
-          {pixCode && (
-            <div className="space-y-2">
-              <Label>Código PIX (copie e cole)</Label>
-              <div
-                className="bg-muted p-3 rounded-lg text-xs break-all cursor-pointer select-all"
-                onClick={() => {
-                  navigator.clipboard.writeText(String(pixCode));
-                  toast({ title: "Código copiado!" });
-                }}
-              >
-                {String(pixCode)}
-              </div>
-            </div>
-          )}
-
-          <p className="text-sm text-muted-foreground text-center">
-            Total: <strong>R$ {total.toFixed(2).replace(".", ",")}</strong>
+        <div className="max-w-md w-full bg-card rounded-2xl shadow-lg p-6 space-y-5 text-center">
+          <ShieldCheck className="w-12 h-12 text-primary mx-auto" />
+          <h2 className="text-xl font-bold">Finalize o pagamento via PIX</h2>
+          <p className="text-muted-foreground text-sm">
+            Complete o pagamento na página da AtomoPay que foi aberta.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Total: <strong className="text-price text-lg">R$ {total.toFixed(2).replace(".", ",")}</strong>
           </p>
 
-          {!pixCode && !pixData?.qr_code_base64 && (
-            <div className="bg-muted p-4 rounded-lg text-sm">
-              <p className="font-medium mb-2">Dados do pagamento:</p>
-              <pre className="text-xs whitespace-pre-wrap break-all">
-                {JSON.stringify(pixData, null, 2)}
-              </pre>
-            </div>
-          )}
-
-          <Button
-            className="w-full"
-            onClick={() => setStep("confirmed")}
-          >
-            Já realizei o pagamento
-          </Button>
+          <div className="space-y-3">
+            <Button
+              className="w-full"
+              variant="outline"
+              onClick={() => window.open(ATOMOPAY_CHECKOUT_URL, "_blank")}
+            >
+              Abrir página de pagamento novamente
+            </Button>
+            <Button
+              className="w-full"
+              onClick={() => setStep("confirmed")}
+            >
+              Já realizei o pagamento
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -238,16 +187,9 @@ const Index = () => {
         <Button
           className="w-full h-14 text-lg font-bold gap-2"
           onClick={handleSubmit}
-          disabled={loading}
         >
-          {loading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <>
-              <ShieldCheck className="w-5 h-5" />
-              Pagar com PIX
-            </>
-          )}
+          <ShieldCheck className="w-5 h-5" />
+          Pagar com PIX
         </Button>
 
         <p className="text-xs text-center text-muted-foreground">

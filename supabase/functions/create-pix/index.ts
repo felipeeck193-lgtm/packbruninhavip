@@ -16,48 +16,50 @@ serve(async (req) => {
       throw new Error('ATOMOPAY_API_TOKEN is not configured');
     }
 
-    const { name, email, whatsapp, cpf, amount, quantity, offer_hash } = await req.json();
+    const { name, email, whatsapp, cpf, amount, quantity } = await req.json();
 
-    if (!name || !email || !whatsapp || !amount) {
+    if (!name || !email || !whatsapp) {
       return new Response(
-        JSON.stringify({ error: 'Campos obrigatórios: name, email, whatsapp, amount' }),
+        JSON.stringify({ error: 'Campos obrigatórios: name, email, whatsapp' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    const unitPrice = 3990;
+    const qty = quantity || 1;
+    const totalAmount = unitPrice * qty;
+
     const payload = {
       api_token: ATOMOPAY_API_TOKEN,
-      offer_hash: offer_hash || "",
-      amount,
+      offer_hash: "dolhnb05tc",
+      amount: totalAmount,
       payment_method: "pix",
-      cart: [
-        {
-          name: "PACK MEGA DIGITAL",
-          quantity: quantity || 1,
-          price: amount,
-        },
-      ],
+      cart: [{
+        offer_hash: "dolhnb05tc",
+        product_hash: "m2vssdnc7d",
+        title: "PACK MEGA DIGITAL",
+        operation_type: "pix",
+        quantity: qty,
+        price: unitPrice,
+      }],
       customer: {
-        name,
-        email,
-        phone: whatsapp,
-        ...(cpf ? { document: cpf } : {}),
+        name: name,
+        email: email,
+        phone: whatsapp.replace(/\D/g, ''),
+        ...(cpf && cpf.replace(/\D/g, '').length >= 11 ? { document: cpf.replace(/\D/g, '') } : {}),
       },
     };
 
-    console.log("Sending to AtomoPay:", JSON.stringify(payload));
+    console.log("Payload:", JSON.stringify(payload));
 
     const response = await fetch('https://api.atomopay.com.br/api/public/v1/transactions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(payload),
     });
 
     const data = await response.json();
-    console.log("AtomoPay response:", response.status, JSON.stringify(data));
+    console.log("Response:", response.status, JSON.stringify(data));
 
     return new Response(JSON.stringify(data), {
       status: response.ok ? 200 : response.status,
