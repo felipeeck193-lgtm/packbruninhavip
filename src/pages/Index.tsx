@@ -3,11 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import CountdownTimer from "@/components/CountdownTimer";
 import QuantitySelector from "@/components/QuantitySelector";
-import AddressForm, { type AddressData } from "@/components/AddressForm";
-import ShippingOptions from "@/components/ShippingOptions";
 import productBanner from "@/assets/product-banner.png";
 import confirmationImg from "@/assets/confirmation.jpg";
 
@@ -19,39 +17,18 @@ const Index = () => {
   const [quantity, setQuantity] = useState(1);
   const [step, setStep] = useState<"checkout" | "payment" | "confirmed">("checkout");
 
-  // Customer
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
-  const [cpf, setCpf] = useState("");
 
-  // Address
-  const [address, setAddress] = useState<AddressData>({
-    cep: "", street: "", neighborhood: "", city: "", state: "", number: "", complement: "",
-  });
-  const [addressLoaded, setAddressLoaded] = useState(false);
-
-  // Shipping
-  const [shipping, setShipping] = useState("");
-
-  const shippingCost = shipping === "sedex" ? 35.67 : shipping === "pac" ? 23.94 : 0;
-  const total = quantity * UNIT_PRICE + shippingCost;
+  const total = quantity * UNIT_PRICE;
 
   const handleSubmit = () => {
     if (!name || !email || !whatsapp) {
       toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
       return;
     }
-    if (!address.cep || !address.street || !address.number || !address.city || !address.state) {
-      toast({ title: "Preencha o endereço completo", variant: "destructive" });
-      return;
-    }
-    if (!shipping) {
-      toast({ title: "Selecione uma opção de frete", variant: "destructive" });
-      return;
-    }
 
-    // Open AtomoPay checkout in new tab
     window.open(ATOMOPAY_CHECKOUT_URL, "_blank");
     setStep("payment");
   };
@@ -104,14 +81,12 @@ const Index = () => {
       <CountdownTimer initialMinutes={5} />
 
       <div className="max-w-lg mx-auto p-4 space-y-5 pb-8">
-        {/* Product Banner */}
         <img
           src={productBanner}
           alt="Conjunto Premium Toalhas"
           className="w-full rounded-xl shadow-md"
         />
 
-        {/* Product Info */}
         <div className="bg-card rounded-xl p-4 shadow-sm space-y-3">
           <h1 className="text-lg font-bold leading-tight">
             Conjunto Premium 15 Toalhas Super Banhão de Alta Maciez + 5 Toalhas de Rosto de BRINDE
@@ -127,7 +102,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Customer Form */}
         <div className="bg-card rounded-xl p-4 shadow-sm space-y-3">
           <h3 className="font-semibold text-foreground">Seus Dados</h3>
           <div>
@@ -144,27 +118,18 @@ const Index = () => {
           </div>
         </div>
 
-
-        {/* Summary */}
-        {shipping && (
-          <div className="bg-card rounded-xl p-4 shadow-sm space-y-2">
-            <h3 className="font-semibold">Resumo</h3>
-            <div className="flex justify-between text-sm">
-              <span>{quantity}x Conjunto Premium Toalhas</span>
-              <span>R$ {(quantity * UNIT_PRICE).toFixed(2).replace(".", ",")}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Frete ({shipping.toUpperCase()})</span>
-              <span>R$ {shippingCost.toFixed(2).replace(".", ",")}</span>
-            </div>
-            <div className="border-t pt-2 flex justify-between font-bold text-lg">
-              <span>Total</span>
-              <span className="text-price">R$ {total.toFixed(2).replace(".", ",")}</span>
-            </div>
+        <div className="bg-card rounded-xl p-4 shadow-sm space-y-2">
+          <h3 className="font-semibold">Resumo</h3>
+          <div className="flex justify-between text-sm">
+            <span>{quantity}x Conjunto Premium Toalhas</span>
+            <span>R$ {(quantity * UNIT_PRICE).toFixed(2).replace(".", ",")}</span>
           </div>
-        )}
+          <div className="border-t pt-2 flex justify-between font-bold text-lg">
+            <span>Total</span>
+            <span className="text-price">R$ {total.toFixed(2).replace(".", ",")}</span>
+          </div>
+        </div>
 
-        {/* Pay Button */}
         <Button
           className="w-full h-14 text-lg font-bold gap-2"
           onClick={handleSubmit}
