@@ -144,21 +144,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Address */}
-        <div className="bg-card rounded-xl p-4 shadow-sm">
-          <AddressForm
-            address={address}
-            onAddressChange={setAddress}
-            onCepLoaded={() => setAddressLoaded(true)}
-          />
-        </div>
-
-        {/* Shipping */}
-        {(addressLoaded || address.city) && (
-          <div className="bg-card rounded-xl p-4 shadow-sm">
-            <ShippingOptions selected={shipping} onSelect={setShipping} />
-          </div>
-        )}
 
         {/* Summary */}
         {shipping && (
