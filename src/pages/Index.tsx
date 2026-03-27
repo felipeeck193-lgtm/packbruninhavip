@@ -142,10 +142,6 @@ const Index = () => {
             <Label htmlFor="whatsapp">WhatsApp *</Label>
             <Input id="whatsapp" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="(00) 00000-0000" />
           </div>
-          <div>
-            <Label htmlFor="cpf">CPF (opcional)</Label>
-            <Input id="cpf" value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" />
-          </div>
         </div>
 
         {/* Address */}
