@@ -401,9 +401,9 @@ const Index = () => {
     setIsTyping(true);
     try {
       const checkMsg = await generateAiMessage("o cara mandou o comprovante de pagamento. diga que vai verificar e pede pra esperar");
-      setMessages((prev) => [...prev, { role: "assistant", content: checkMsg }]);
+      await sendAiAsBubbles(checkMsg);
     } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "espera ai vou ver" }]);
+      await sendAiAsBubbles("espera ai vou ver");
     }
 
     await new Promise((r) => setTimeout(r, 1500));
@@ -416,19 +416,19 @@ const Index = () => {
       if (result.status === "PAID") {
         fbq('track', 'Purchase', { value: 19.90, currency: 'BRL' });
         const paidMsg = await generateAiMessage("o pagamento foi confirmado! comemora com ele e diz que vai ligar pra ele agora").catch(() => "confirmou bb vou te ligar");
-        setMessages((prev) => [...prev, { role: "assistant", content: paidMsg }]);
+        await sendAiAsBubbles(paidMsg);
 
         setTimeout(() => {
           setVideoCall(true);
         }, 2500);
       } else {
         const pendingMsg = await generateAiMessage("o pagamento ainda nao caiu. avisa ele e pede pra mandar o comprovante de novo quando pagar").catch(() => "ainda nao caiu amor");
-        setMessages((prev) => [...prev, { role: "assistant", content: pendingMsg }]);
+        await sendAiAsBubbles(pendingMsg);
       }
     } catch {
       setIsTyping(false);
       const errMsg = await generateAiMessage("nao conseguiu verificar o pagamento. pede desculpa e pede pra tentar dnv").catch(() => "nao consegui ver tenta dnv");
-      setMessages((prev) => [...prev, { role: "assistant", content: errMsg }]);
+      await sendAiAsBubbles(errMsg);
     }
   }, [currentTransactionId, generateAiMessage]);
 
