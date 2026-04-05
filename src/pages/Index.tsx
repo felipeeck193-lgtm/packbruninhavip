@@ -422,17 +422,6 @@ const Index = () => {
     }];
 
     let assistantSoFar = "";
-    const upsertAssistant = (chunk: string) => {
-      setIsTyping(false);
-      assistantSoFar += chunk;
-      setMessages((prev) => {
-        const last = prev[prev.length - 1];
-        if (last?.role === "assistant" && !last.special) {
-          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
-        }
-        return [...prev, { role: "assistant", content: assistantSoFar }];
-      });
-    };
 
     try {
       // Delay realista antes de mostrar "digitando..."
@@ -444,44 +433,68 @@ const Index = () => {
       const typingDelay = 1000 + Math.random() * 2500;
       await new Promise((r) => setTimeout(r, typingDelay));
 
+      // Collect full response first
+      let fullResponse = "";
       await streamChat({
         messages: aiMessages,
-        onDelta: (chunk) => upsertAssistant(chunk),
-        onDone: () => {
-          setIsLoading(false);
-
-          // Check if the user asked for a pack in their message
-          const lower = text.toLowerCase();
-          const wantsPack = lower.includes("quero") || lower.includes("comprar") || lower.includes("pack") ||
-            lower.includes("pagar") || lower.includes("pix") || lower.includes("vip") || lower.includes("proibido");
-
-          if (wantsPack) {
-            const isVip = lower.includes("vip") || lower.includes("1000") || lower.includes("39") || lower.includes("chamada");
-            setTimeout(() => generatePix(isVip ? "vip" : "proibido"), 1500);
-          }
-
-          // After 3 user messages, Bruninha offers to video call
-          if (userMessageCountRef.current >= 3 && !callOfferedRef.current) {
-            callOfferedRef.current = true;
-            setTimeout(() => {
-              setIsTyping(true);
-              setTimeout(async () => {
-                try {
-                  const callMsg = await generateAiMessage("vc ta gostando da conversa e quer ligar pra ele de video. pergunta se pode ligar, fala que quer mostrar algo especial");
-                  setMessages((prev) => [...prev, { role: "assistant", content: callMsg }]);
-                } catch {
-                  setMessages((prev) => [...prev, { role: "assistant", content: "ei amor posso te ligar? quero te mostrar uma coisa 😏📹" }]);
-                }
-                setIsTyping(false);
-                // Start incoming call after a delay
-                setTimeout(() => {
-                  setIncomingCall(true);
-                }, 5000);
-              }, 2000);
-            }, 3000);
-          }
-        },
+        onDelta: (chunk) => { fullResponse += chunk; },
+        onDone: () => {},
       });
+
+      // Split response into multiple messages (by newline or sentence breaks)
+      const parts = fullResponse
+        .split(/\n+/)
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0);
+
+      // Send each part as a separate message with realistic delays
+      for (let i = 0; i < parts.length; i++) {
+        if (i > 0) {
+          // Delay between messages: "read" pause + "typing" pause
+          setIsTyping(true);
+          const betweenDelay = 600 + Math.random() * 1500;
+          await new Promise((r) => setTimeout(r, betweenDelay));
+        }
+        setIsTyping(false);
+        setMessages((prev) => [...prev, { role: "assistant", content: parts[i] }]);
+        // Small pause to let the message render before next typing indicator
+        if (i < parts.length - 1) {
+          await new Promise((r) => setTimeout(r, 200));
+        }
+      }
+
+      setIsLoading(false);
+
+      // Check if the user asked for a pack in their message
+      const lower = text.toLowerCase();
+      const wantsPack = lower.includes("quero") || lower.includes("comprar") || lower.includes("pack") ||
+        lower.includes("pagar") || lower.includes("pix") || lower.includes("vip") || lower.includes("proibido");
+
+      if (wantsPack) {
+        const isVip = lower.includes("vip") || lower.includes("1000") || lower.includes("39") || lower.includes("chamada");
+        setTimeout(() => generatePix(isVip ? "vip" : "proibido"), 1500);
+      }
+
+      // After 3 user messages, Bruninha offers to video call
+      if (userMessageCountRef.current >= 3 && !callOfferedRef.current) {
+        callOfferedRef.current = true;
+        setTimeout(() => {
+          setIsTyping(true);
+          setTimeout(async () => {
+            try {
+              const callMsg = await generateAiMessage("vc ta gostando da conversa e quer ligar pra ele de video. pergunta se pode ligar, fala que quer mostrar algo especial");
+              setMessages((prev) => [...prev, { role: "assistant", content: callMsg }]);
+            } catch {
+              setMessages((prev) => [...prev, { role: "assistant", content: "ei amor posso te ligar? quero te mostrar uma coisa 😏📹" }]);
+            }
+            setIsTyping(false);
+            // Start incoming call after a delay
+            setTimeout(() => {
+              setIncomingCall(true);
+            }, 5000);
+          }, 2000);
+        }, 3000);
+      }
     } catch (e: any) {
       toast.error(e.message || "Erro ao enviar mensagem");
       setIsLoading(false);
