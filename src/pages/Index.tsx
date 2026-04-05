@@ -823,7 +823,7 @@ const Index = () => {
           onKeyDown={handleKeyDown}
           placeholder="Mensagem"
           className="flex-1 bg-secondary rounded-full px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none border-none"
-          disabled={isLoading}
+          
         />
         <button
           onClick={handleSend}
