@@ -260,9 +260,9 @@ const Index = () => {
           setIsTyping(true);
           try {
             const msg = await generateAiMessage("vc ligou pra ele mas ele nao atendeu. manda msg dizendo que tentou ligar");
-            setMessages((prev) => [...prev, { role: "assistant", content: msg }]);
+            await sendAiAsBubbles(msg);
           } catch {
-            setMessages((prev) => [...prev, { role: "assistant", content: "tentei te ligar amor 😢" }]);
+            await sendAiAsBubbles("tentei te ligar amor 😢");
           }
           setIsTyping(false);
         }, 1500);
