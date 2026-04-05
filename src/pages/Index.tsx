@@ -60,6 +60,7 @@ const Index = () => {
   const incomingCallTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const incomingCallTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userMessageCountRef = useRef(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const callOfferedRef = useRef(false);
   const callDoneRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
