@@ -827,7 +827,7 @@ const Index = () => {
         />
         <button
           onClick={handleSend}
-          disabled={!input.trim() || isLoading}
+          disabled={!input.trim()}
           className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground disabled:opacity-40 transition-opacity flex-shrink-0"
         >
           <Send className="w-4 h-4" />
