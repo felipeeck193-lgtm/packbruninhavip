@@ -813,7 +813,7 @@ const Index = () => {
         <button onClick={() => setShowEmojis((v) => !v)} className="flex-shrink-0">
           <Smile className={`w-6 h-6 cursor-pointer ${showEmojis ? "text-primary" : "text-muted-foreground"}`} />
         </button>
-        <button onClick={() => fileInputRef.current?.click()} className="flex-shrink-0" disabled={isLoading}>
+        <button onClick={() => fileInputRef.current?.click()} className="flex-shrink-0">
           <Paperclip className="w-6 h-6 text-muted-foreground" />
         </button>
         <input
@@ -823,11 +823,11 @@ const Index = () => {
           onKeyDown={handleKeyDown}
           placeholder="Mensagem"
           className="flex-1 bg-secondary rounded-full px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none border-none"
-          disabled={isLoading}
+          
         />
         <button
           onClick={handleSend}
-          disabled={!input.trim() || isLoading}
+          disabled={!input.trim()}
           className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground disabled:opacity-40 transition-opacity flex-shrink-0"
         >
           <Send className="w-4 h-4" />
