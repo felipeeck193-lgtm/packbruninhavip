@@ -441,11 +441,26 @@ const Index = () => {
         onDone: () => {},
       });
 
-      // Split response into multiple messages (by newline or sentence breaks)
-      const parts = fullResponse
+      // Split response into multiple short messages
+      const rawParts = fullResponse
         .split(/\n+/)
         .map((p) => p.trim())
         .filter((p) => p.length > 0);
+
+      // Force-split any line longer than 5 words into separate messages
+      const parts: string[] = [];
+      for (const part of rawParts) {
+        const words = part.split(/\s+/);
+        if (words.length <= 5) {
+          parts.push(part);
+        } else {
+          // Split into chunks of 3-4 words
+          for (let j = 0; j < words.length; j += 4) {
+            const chunk = words.slice(j, j + 4).join(" ");
+            if (chunk.trim()) parts.push(chunk.trim());
+          }
+        }
+      }
 
       // Send each part as a separate message with realistic delays
       for (let i = 0; i < parts.length; i++) {
