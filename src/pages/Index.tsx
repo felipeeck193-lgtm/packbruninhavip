@@ -379,9 +379,9 @@ const Index = () => {
         setIsTyping(true);
         try {
           const followUp = await generateAiMessage("vc mandou o codigo pix pra ele. pede pra ele te mandar o comprovante quando pagar. NAO mande email, chave pix, link ou qualquer dado");
-          setMessages((prev) => [...prev, { role: "assistant", content: followUp }]);
+          await sendAiAsBubbles(followUp);
         } catch {
-          setMessages((prev) => [...prev, { role: "assistant", content: "me manda o comprovante quando pagar" }]);
+          await sendAiAsBubbles("me manda o comprovante quando pagar");
         }
         setIsTyping(false);
       }, 2000);
@@ -389,7 +389,7 @@ const Index = () => {
       setIsTyping(false);
       toast.error(e.message || "Erro ao gerar PIX");
       const errMsg = await generateAiMessage("deu erro ao gerar o pix, peça desculpa e diga pra tentar depois").catch(() => "deu erro amor tenta depois");
-      setMessages((prev) => [...prev, { role: "assistant", content: errMsg }]);
+      await sendAiAsBubbles(errMsg);
     }
   }, [generateAiMessage]);
 
