@@ -6,7 +6,18 @@ import { streamChat, type Msg } from "@/lib/streamChat";
 import { createSale, checkStatus } from "@/lib/blackcatPayment";
 import { PixCodeDisplay, PaymentChecking } from "@/components/PaymentComponents";
 import VideoCallScreen from "@/components/VideoCallScreen";
+import ViewOncePhoto from "@/components/ViewOncePhoto";
 import { toast } from "sonner";
+
+import bruninhaPhoto1 from "@/assets/bruninha-photo-1.png";
+import bruninhaPhoto2 from "@/assets/bruninha-photo-2.png";
+import bruninhaPhoto3 from "@/assets/bruninha-photo-3.png";
+
+const BRUNINHA_PHOTOS = [
+  { src: bruninhaPhoto1, context: "no banheiro de calcinha sem sutia de costas pra camera mostrando a bunda" },
+  { src: bruninhaPhoto2, context: "pelada no canto do quarto de costas pro celular mostrando a bunda de frente pro espelho" },
+  { src: bruninhaPhoto3, context: "selfie sentada na cama pelada de pernas abertas" },
+];
 
 declare global {
   interface Window { fbq?: (...args: any[]) => void; }
@@ -29,6 +40,7 @@ type SpecialContent =
   | { type: "pix"; copyPaste: string; qrCodeBase64?: string }
   | { type: "checking" }
   | { type: "text"; text: string }
+  | { type: "view-once-photo"; photoIndex: number }
   | { type: "call-history"; callType: "video" | "voice"; status: "answered" | "declined" | "missed"; duration?: number };
 
 interface ChatMsg extends Msg {
@@ -45,6 +57,8 @@ const FAKE_CUSTOMER = {
 
 const Index = () => {
   const [messages, setMessages] = useState<ChatMsg[]>([INITIAL_MESSAGE]);
+  const [openedPhotos, setOpenedPhotos] = useState<Set<number>>(new Set());
+  const photosSentRef = useRef(0);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -139,6 +153,52 @@ const Index = () => {
       }
     }
   }, []);
+
+  // Send a view-once photo from Bruninha
+  const sendViewOncePhoto = useCallback(async (signal?: AbortSignal) => {
+    const idx = photosSentRef.current;
+    if (idx >= BRUNINHA_PHOTOS.length) {
+      // All 3 sent - say only in pack
+      setIsTyping(true);
+      try {
+        const msg = await generateAiMessage("vc ja mandou 3 fotos gratis pra ele. diga que mais fotos e videos só comprando o pack. mencione o pack proibido de 19,90 com 100 videos ou vip de 39,90 com 1000 videos + chamada");
+        await sendAiAsBubbles(msg, signal);
+      } catch {
+        await sendAiAsBubbles("amor mais fotos so no pack 😏", signal);
+      }
+      setIsTyping(false);
+      return;
+    }
+
+    photosSentRef.current = idx + 1;
+
+    // AI intro message before the photo
+    setIsTyping(true);
+    try {
+      const introContext = idx === 0
+        ? "vc vai mandar uma foto sua pra ele. fala algo provocante tipo 'olha isso' ou 'toma' algo curto e safado"
+        : idx === 1
+        ? "vc vai mandar mais uma foto sua. provoca ele tipo 'quer mais?' ou 'gostou da outra?'"
+        : "vc vai mandar a ultima foto gratis. diz algo tipo 'ultima hein' ou 'aproveita'";
+      const intro = await generateAiMessage(introContext);
+      await sendAiAsBubbles(intro, signal);
+    } catch {
+      await sendAiAsBubbles("olha isso 😏", signal);
+    }
+
+    if (signal?.aborted) { setIsTyping(false); return; }
+
+    // Small delay then send the photo
+    setIsTyping(true);
+    try { await abortableSleep(1000 + Math.random() * 1500, signal!); } catch { setIsTyping(false); return; }
+    setIsTyping(false);
+
+    setMessages((prev) => [...prev, {
+      role: "assistant",
+      content: "",
+      special: { type: "view-once-photo", photoIndex: idx },
+    }]);
+  }, [generateAiMessage, sendAiAsBubbles]);
 
   // Preload video in background on mount
   useEffect(() => {
@@ -538,8 +598,15 @@ const Index = () => {
 
       setIsLoading(false);
 
-      // Check if the user asked for a pack in their message
+      // Check if user asked for photo/nudes
       const lower = text.toLowerCase();
+      const wantsPhoto = /\b(foto|nud[e]?s?|pic|image[mn]?|mostra|manda foto|ver vc|te ver|sua foto|se mostra|deixa eu ver)\b/i.test(lower);
+      
+      if (wantsPhoto && !lower.includes("pack") && !lower.includes("comprar")) {
+        setTimeout(() => sendViewOncePhoto(signal), 2000);
+      }
+
+      // Check if the user asked for a pack in their message
       const wantsPack = lower.includes("quero") || lower.includes("comprar") || lower.includes("pack") ||
         lower.includes("pagar") || lower.includes("pix") || lower.includes("vip") || lower.includes("proibido");
 
@@ -772,6 +839,13 @@ const Index = () => {
                 <PixCodeDisplay
                   copyPaste={msg.special.copyPaste}
                   qrCodeBase64={msg.special.qrCodeBase64}
+                />
+              )}
+              {msg.special?.type === "view-once-photo" && (
+                <ViewOncePhoto
+                  src={BRUNINHA_PHOTOS[msg.special.photoIndex]?.src || ""}
+                  opened={openedPhotos.has(msg.special.photoIndex)}
+                  onOpen={() => setOpenedPhotos((prev) => new Set(prev).add((msg.special as any).photoIndex))}
                 />
               )}
               {msg.special?.type === "checking" && <PaymentChecking />}
