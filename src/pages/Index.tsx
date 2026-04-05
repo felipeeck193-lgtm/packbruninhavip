@@ -40,6 +40,7 @@ type SpecialContent =
   | { type: "pix"; copyPaste: string; qrCodeBase64?: string }
   | { type: "checking" }
   | { type: "text"; text: string }
+  | { type: "view-once-photo"; photoIndex: number }
   | { type: "call-history"; callType: "video" | "voice"; status: "answered" | "declined" | "missed"; duration?: number };
 
 interface ChatMsg extends Msg {
