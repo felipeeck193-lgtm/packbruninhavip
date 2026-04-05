@@ -98,6 +98,39 @@ const Index = () => {
     return "oi 😏";
   }, [messages]);
 
+  // Helper: split text into short bubbles (max 6 words each) and send with delays
+  const splitIntoBubbles = (text: string): string[] => {
+    const rawParts = text.split(/\n+/).map((p) => p.trim()).filter((p) => p.length > 0);
+    const bubbles: string[] = [];
+    for (const part of rawParts) {
+      const words = part.split(/\s+/);
+      if (words.length <= 6) {
+        bubbles.push(part);
+      } else {
+        for (let j = 0; j < words.length; j += 5) {
+          const chunk = words.slice(j, j + 5).join(" ");
+          if (chunk.trim()) bubbles.push(chunk.trim());
+        }
+      }
+    }
+    return bubbles.length > 0 ? bubbles : [text];
+  };
+
+  const sendAiAsBubbles = useCallback(async (text: string) => {
+    const bubbles = splitIntoBubbles(text);
+    for (let i = 0; i < bubbles.length; i++) {
+      if (i > 0) {
+        setIsTyping(true);
+        await new Promise((r) => setTimeout(r, 500 + Math.random() * 1200));
+      }
+      setIsTyping(false);
+      setMessages((prev) => [...prev, { role: "assistant", content: bubbles[i] }]);
+      if (i < bubbles.length - 1) {
+        await new Promise((r) => setTimeout(r, 150));
+      }
+    }
+  }, []);
+
   // Preload video in background on mount
   useEffect(() => {
     const link = document.createElement("link");
