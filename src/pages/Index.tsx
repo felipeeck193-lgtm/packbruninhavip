@@ -813,7 +813,7 @@ const Index = () => {
         <button onClick={() => setShowEmojis((v) => !v)} className="flex-shrink-0">
           <Smile className={`w-6 h-6 cursor-pointer ${showEmojis ? "text-primary" : "text-muted-foreground"}`} />
         </button>
-        <button onClick={() => fileInputRef.current?.click()} className="flex-shrink-0" disabled={isLoading}>
+        <button onClick={() => fileInputRef.current?.click()} className="flex-shrink-0">
           <Paperclip className="w-6 h-6 text-muted-foreground" />
         </button>
         <input
