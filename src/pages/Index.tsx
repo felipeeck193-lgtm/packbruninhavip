@@ -13,7 +13,7 @@ declare global {
 }
 const fbq = (...args: any[]) => window.fbq?.(...args);
 
-import bruninhaAvatar from "@/assets/bruninha-avatar.png";
+import bruninhaAvatar from "@/assets/bruninha-avatar-small.webp";
 
 const INITIAL_MESSAGE: Msg = {
   role: "assistant",
