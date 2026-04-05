@@ -308,9 +308,9 @@ const Index = () => {
       setIsTyping(true);
       try {
         const msg = await generateAiMessage("vc ligou pra ele mas ele recusou a chamada. manda msg perguntando pq nao atendeu");
-        setMessages((prev) => [...prev, { role: "assistant", content: msg }]);
+        await sendAiAsBubbles(msg);
       } catch {
-        setMessages((prev) => [...prev, { role: "assistant", content: "pq nao atendeu? 😢" }]);
+        await sendAiAsBubbles("pq nao atendeu? 😢");
       }
       setIsTyping(false);
     }, 1500);
