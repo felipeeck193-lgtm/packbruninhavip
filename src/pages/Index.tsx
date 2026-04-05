@@ -406,13 +406,11 @@ const Index = () => {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
-    setIsTyping(true);
     userMessageCountRef.current += 1;
 
     // If user sends an image and we have a pending transaction, verify payment
     if (image && currentTransactionId) {
       setIsLoading(false);
-      setIsTyping(false);
       await verifyPayment();
       return;
     }
@@ -437,8 +435,13 @@ const Index = () => {
     };
 
     try {
-      // Delay realista de "digitando..." antes de responder
-      const typingDelay = 1500 + Math.random() * 3000;
+      // Delay realista antes de mostrar "digitando..."
+      const readDelay = 800 + Math.random() * 2000;
+      await new Promise((r) => setTimeout(r, readDelay));
+      setIsTyping(true);
+
+      // Delay de digitação antes de responder
+      const typingDelay = 1000 + Math.random() * 2500;
       await new Promise((r) => setTimeout(r, typingDelay));
 
       await streamChat({
