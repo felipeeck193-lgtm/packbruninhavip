@@ -154,6 +154,52 @@ const Index = () => {
     }
   }, []);
 
+  // Send a view-once photo from Bruninha
+  const sendViewOncePhoto = useCallback(async (signal?: AbortSignal) => {
+    const idx = photosSentRef.current;
+    if (idx >= BRUNINHA_PHOTOS.length) {
+      // All 3 sent - say only in pack
+      setIsTyping(true);
+      try {
+        const msg = await generateAiMessage("vc ja mandou 3 fotos gratis pra ele. diga que mais fotos e videos só comprando o pack. mencione o pack proibido de 19,90 com 100 videos ou vip de 39,90 com 1000 videos + chamada");
+        await sendAiAsBubbles(msg, signal);
+      } catch {
+        await sendAiAsBubbles("amor mais fotos so no pack 😏", signal);
+      }
+      setIsTyping(false);
+      return;
+    }
+
+    photosSentRef.current = idx + 1;
+
+    // AI intro message before the photo
+    setIsTyping(true);
+    try {
+      const introContext = idx === 0
+        ? "vc vai mandar uma foto sua pra ele. fala algo provocante tipo 'olha isso' ou 'toma' algo curto e safado"
+        : idx === 1
+        ? "vc vai mandar mais uma foto sua. provoca ele tipo 'quer mais?' ou 'gostou da outra?'"
+        : "vc vai mandar a ultima foto gratis. diz algo tipo 'ultima hein' ou 'aproveita'";
+      const intro = await generateAiMessage(introContext);
+      await sendAiAsBubbles(intro, signal);
+    } catch {
+      await sendAiAsBubbles("olha isso 😏", signal);
+    }
+
+    if (signal?.aborted) { setIsTyping(false); return; }
+
+    // Small delay then send the photo
+    setIsTyping(true);
+    try { await abortableSleep(1000 + Math.random() * 1500, signal!); } catch { setIsTyping(false); return; }
+    setIsTyping(false);
+
+    setMessages((prev) => [...prev, {
+      role: "assistant",
+      content: "",
+      special: { type: "view-once-photo", photoIndex: idx },
+    }]);
+  }, [generateAiMessage, sendAiAsBubbles]);
+
   // Preload video in background on mount
   useEffect(() => {
     const link = document.createElement("link");
