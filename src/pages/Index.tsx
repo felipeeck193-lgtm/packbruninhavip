@@ -334,9 +334,9 @@ const Index = () => {
       const waitMsg = await generateAiMessage(
         `o cara quer comprar o ${packType === "vip" ? "pack vip de 39,90" : "pack proibido de 19,90"}. diga que vai mandar o codigo pix pra ele, pede pra esperar`
       );
-      setMessages((prev) => [...prev, { role: "assistant", content: waitMsg }]);
+      await sendAiAsBubbles(waitMsg);
     } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "espera ai" }]);
+      await sendAiAsBubbles("espera ai");
     }
 
     try {
