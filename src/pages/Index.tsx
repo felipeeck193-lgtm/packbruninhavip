@@ -121,7 +121,7 @@ const Index = () => {
     for (let i = 0; i < bubbles.length; i++) {
       if (i > 0) {
         setIsTyping(true);
-        await new Promise((r) => setTimeout(r, 500 + Math.random() * 1200));
+        await new Promise((r) => setTimeout(r, 1500 + Math.random() * 2000));
       }
       setIsTyping(false);
       setMessages((prev) => [...prev, { role: "assistant", content: bubbles[i] }]);
