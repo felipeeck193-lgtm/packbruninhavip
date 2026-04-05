@@ -529,7 +529,6 @@ const Index = () => {
           try { await abortableSleep(200, signal); } catch { setIsLoading(false); return; }
         }
       }
-      }
 
       setIsLoading(false);
 
