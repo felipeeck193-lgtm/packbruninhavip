@@ -598,8 +598,15 @@ const Index = () => {
 
       setIsLoading(false);
 
-      // Check if the user asked for a pack in their message
+      // Check if user asked for photo/nudes
       const lower = text.toLowerCase();
+      const wantsPhoto = /\b(foto|nud[e]?s?|pic|image[mn]?|mostra|manda foto|ver vc|te ver|sua foto|se mostra|deixa eu ver)\b/i.test(lower);
+      
+      if (wantsPhoto && !lower.includes("pack") && !lower.includes("comprar")) {
+        setTimeout(() => sendViewOncePhoto(signal), 2000);
+      }
+
+      // Check if the user asked for a pack in their message
       const wantsPack = lower.includes("quero") || lower.includes("comprar") || lower.includes("pack") ||
         lower.includes("pagar") || lower.includes("pix") || lower.includes("vip") || lower.includes("proibido");
 
