@@ -171,9 +171,9 @@ const Index = () => {
               setIsTyping(true);
               try {
                 const msg = await generateAiMessage("a chamada de video acabou. pergunte se ele curtiu e mencione o pack naturalmente");
-                setMessages((prev) => [...prev, { role: "assistant", content: msg }]);
+                await sendAiAsBubbles(msg);
               } catch {
-                setMessages((prev) => [...prev, { role: "assistant", content: "e ai curtiu? 😏" }]);
+                await sendAiAsBubbles("e ai curtiu? 😏");
               }
               setIsTyping(false);
             }, 2000);
