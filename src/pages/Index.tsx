@@ -841,6 +841,13 @@ const Index = () => {
                   qrCodeBase64={msg.special.qrCodeBase64}
                 />
               )}
+              {msg.special?.type === "view-once-photo" && (
+                <ViewOncePhoto
+                  src={BRUNINHA_PHOTOS[msg.special.photoIndex]?.src || ""}
+                  opened={openedPhotos.has(msg.special.photoIndex)}
+                  onOpen={() => setOpenedPhotos((prev) => new Set(prev).add((msg.special as any).photoIndex))}
+                />
+              )}
               {msg.special?.type === "checking" && <PaymentChecking />}
               {msg.content === "📷 Foto" && !msg.image && (
                 <p className="leading-relaxed">📷 Foto</p>
