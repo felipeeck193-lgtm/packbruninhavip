@@ -159,38 +159,38 @@ const Index = () => {
     const idx = photosSentRef.current;
     if (idx >= BRUNINHA_PHOTOS.length) {
       // All 3 sent - say only in pack
+      const fallbacks = [
+        "amor mais fotos so no pack 😏",
+        "as gratis acabaram bb\nquer mais? tem o pack",
+        "so no pack agora gato 😏",
+      ];
       setIsTyping(true);
-      try {
-        const msg = await generateAiMessage("vc ja mandou 3 fotos gratis pra ele. diga que mais fotos e videos só comprando o pack. mencione o pack proibido de 19,90 com 100 videos ou vip de 39,90 com 1000 videos + chamada");
-        await sendAiAsBubbles(msg, signal);
-      } catch {
-        await sendAiAsBubbles("amor mais fotos so no pack 😏", signal);
-      }
+      try { await abortableSleep(800 + Math.random() * 600, signal!); } catch { setIsTyping(false); return; }
       setIsTyping(false);
+      await sendAiAsBubbles(fallbacks[Math.floor(Math.random() * fallbacks.length)], signal);
       return;
     }
 
     photosSentRef.current = idx + 1;
 
-    // AI intro message before the photo
-    setIsTyping(true);
-    try {
-      const introContext = idx === 0
-        ? "vc vai mandar uma foto sua pra ele. fala algo provocante tipo 'olha isso' ou 'toma' algo curto e safado"
-        : idx === 1
-        ? "vc vai mandar mais uma foto sua. provoca ele tipo 'quer mais?' ou 'gostou da outra?'"
-        : "vc vai mandar a ultima foto gratis. diz algo tipo 'ultima hein' ou 'aproveita'";
-      const intro = await generateAiMessage(introContext);
-      await sendAiAsBubbles(intro, signal);
-    } catch {
-      await sendAiAsBubbles("olha isso 😏", signal);
-    }
+    // Quick hardcoded intro - no AI call needed
+    const intros = [
+      ["olha isso 😏", "toma bb", "pra vc gato 👀"],
+      ["gostou ne 😏", "mais uma amor", "quer ver? 👀"],
+      ["ultima hein bb", "aproveita amor 😏", "dps so no pack"],
+    ];
+    const intro = intros[idx][Math.floor(Math.random() * intros[idx].length)];
 
-    if (signal?.aborted) { setIsTyping(false); return; }
-
-    // Small delay then send the photo
     setIsTyping(true);
-    try { await abortableSleep(1000 + Math.random() * 1500, signal!); } catch { setIsTyping(false); return; }
+    try { await abortableSleep(600 + Math.random() * 800, signal!); } catch { setIsTyping(false); return; }
+    setIsTyping(false);
+    setMessages((prev) => [...prev, { role: "assistant", content: intro }]);
+
+    if (signal?.aborted) return;
+
+    // Quick delay then send the photo
+    setIsTyping(true);
+    try { await abortableSleep(500 + Math.random() * 700, signal!); } catch { setIsTyping(false); return; }
     setIsTyping(false);
 
     setMessages((prev) => [...prev, {
@@ -198,7 +198,7 @@ const Index = () => {
       content: "",
       special: { type: "view-once-photo", photoIndex: idx },
     }]);
-  }, [generateAiMessage, sendAiAsBubbles]);
+  }, [sendAiAsBubbles]);
 
   // Preload video in background on mount
   useEffect(() => {
