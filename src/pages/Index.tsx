@@ -6,7 +6,18 @@ import { streamChat, type Msg } from "@/lib/streamChat";
 import { createSale, checkStatus } from "@/lib/blackcatPayment";
 import { PixCodeDisplay, PaymentChecking } from "@/components/PaymentComponents";
 import VideoCallScreen from "@/components/VideoCallScreen";
+import ViewOncePhoto from "@/components/ViewOncePhoto";
 import { toast } from "sonner";
+
+import bruninhaPhoto1 from "@/assets/bruninha-photo-1.png";
+import bruninhaPhoto2 from "@/assets/bruninha-photo-2.png";
+import bruninhaPhoto3 from "@/assets/bruninha-photo-3.png";
+
+const BRUNINHA_PHOTOS = [
+  { src: bruninhaPhoto1, context: "no banheiro de calcinha sem sutia de costas pra camera mostrando a bunda" },
+  { src: bruninhaPhoto2, context: "pelada no canto do quarto de costas pro celular mostrando a bunda de frente pro espelho" },
+  { src: bruninhaPhoto3, context: "selfie sentada na cama pelada de pernas abertas" },
+];
 
 declare global {
   interface Window { fbq?: (...args: any[]) => void; }
