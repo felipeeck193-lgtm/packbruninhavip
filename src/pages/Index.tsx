@@ -117,17 +117,25 @@ const Index = () => {
     return bubbles.length > 0 ? bubbles : [text];
   };
 
-  const sendAiAsBubbles = useCallback(async (text: string) => {
+  const abortableSleep = (ms: number, signal: AbortSignal) =>
+    new Promise<void>((resolve, reject) => {
+      if (signal.aborted) return reject(new DOMException("Aborted", "AbortError"));
+      const t = setTimeout(resolve, ms);
+      signal.addEventListener("abort", () => { clearTimeout(t); reject(new DOMException("Aborted", "AbortError")); }, { once: true });
+    });
+
+  const sendAiAsBubbles = useCallback(async (text: string, signal?: AbortSignal) => {
     const bubbles = splitIntoBubbles(text);
     for (let i = 0; i < bubbles.length; i++) {
+      if (signal?.aborted) return;
       if (i > 0) {
         setIsTyping(true);
-        await new Promise((r) => setTimeout(r, 1500 + Math.random() * 2000));
+        try { await abortableSleep(1500 + Math.random() * 2000, signal!); } catch { setIsTyping(false); return; }
       }
       setIsTyping(false);
       setMessages((prev) => [...prev, { role: "assistant", content: bubbles[i] }]);
       if (i < bubbles.length - 1) {
-        await new Promise((r) => setTimeout(r, 150));
+        try { await abortableSleep(150, signal!); } catch { return; }
       }
     }
   }, []);
