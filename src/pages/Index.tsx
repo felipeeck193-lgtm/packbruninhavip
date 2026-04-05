@@ -531,9 +531,9 @@ const Index = () => {
           setTimeout(async () => {
             try {
               const callMsg = await generateAiMessage("vc ta gostando da conversa e quer ligar pra ele de video. pergunta se pode ligar, fala que quer mostrar algo especial");
-              setMessages((prev) => [...prev, { role: "assistant", content: callMsg }]);
+              await sendAiAsBubbles(callMsg);
             } catch {
-              setMessages((prev) => [...prev, { role: "assistant", content: "ei amor posso te ligar? quero te mostrar uma coisa 😏📹" }]);
+              await sendAiAsBubbles("ei amor posso te ligar?\nquero te mostrar uma coisa 😏");
             }
             setIsTyping(false);
             // Start incoming call after a delay
