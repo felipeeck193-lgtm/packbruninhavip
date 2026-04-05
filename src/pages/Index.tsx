@@ -57,6 +57,8 @@ const FAKE_CUSTOMER = {
 
 const Index = () => {
   const [messages, setMessages] = useState<ChatMsg[]>([INITIAL_MESSAGE]);
+  const [openedPhotos, setOpenedPhotos] = useState<Set<number>>(new Set());
+  const photosSentRef = useRef(0);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
