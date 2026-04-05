@@ -215,9 +215,9 @@ const Index = () => {
             ? "o cara tentou te ligar por video chamada mas vc recusou. diga que chamada de video só no pack vip por 39,90 com 1000 videos"
             : "o cara tentou te ligar por voz mas vc recusou. diga que ligação só no pack vip por 39,90";
           const msg = await generateAiMessage(context);
-          setMessages((prev) => [...prev, { role: "assistant", content: msg }]);
+          await sendAiAsBubbles(msg);
         } catch {
-          setMessages((prev) => [...prev, { role: "assistant", content: "amor chamada só no pack vip 😏" }]);
+          await sendAiAsBubbles("amor chamada só no pack vip 😏");
         }
         setIsTyping(false);
       }, 2000);
