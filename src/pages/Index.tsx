@@ -291,6 +291,12 @@ const Index = () => {
     } else if ((el as any).webkitRequestFullscreen) {
       (el as any).webkitRequestFullscreen();
     }
+    // Abort any ongoing AI message sequence
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    setIsTyping(false);
+    setIsLoading(false);
     setIncomingCallAnswered(true);
     callDoneRef.current = true;
     // After 2 seconds of "connecting", switch to real video call screen
