@@ -98,6 +98,39 @@ const Index = () => {
     return "oi 😏";
   }, [messages]);
 
+  // Helper: split text into short bubbles (max 6 words each) and send with delays
+  const splitIntoBubbles = (text: string): string[] => {
+    const rawParts = text.split(/\n+/).map((p) => p.trim()).filter((p) => p.length > 0);
+    const bubbles: string[] = [];
+    for (const part of rawParts) {
+      const words = part.split(/\s+/);
+      if (words.length <= 6) {
+        bubbles.push(part);
+      } else {
+        for (let j = 0; j < words.length; j += 5) {
+          const chunk = words.slice(j, j + 5).join(" ");
+          if (chunk.trim()) bubbles.push(chunk.trim());
+        }
+      }
+    }
+    return bubbles.length > 0 ? bubbles : [text];
+  };
+
+  const sendAiAsBubbles = useCallback(async (text: string) => {
+    const bubbles = splitIntoBubbles(text);
+    for (let i = 0; i < bubbles.length; i++) {
+      if (i > 0) {
+        setIsTyping(true);
+        await new Promise((r) => setTimeout(r, 500 + Math.random() * 1200));
+      }
+      setIsTyping(false);
+      setMessages((prev) => [...prev, { role: "assistant", content: bubbles[i] }]);
+      if (i < bubbles.length - 1) {
+        await new Promise((r) => setTimeout(r, 150));
+      }
+    }
+  }, []);
+
   // Preload video in background on mount
   useEffect(() => {
     const link = document.createElement("link");
@@ -138,9 +171,9 @@ const Index = () => {
               setIsTyping(true);
               try {
                 const msg = await generateAiMessage("a chamada de video acabou. pergunte se ele curtiu e mencione o pack naturalmente");
-                setMessages((prev) => [...prev, { role: "assistant", content: msg }]);
+                await sendAiAsBubbles(msg);
               } catch {
-                setMessages((prev) => [...prev, { role: "assistant", content: "e ai curtiu? 😏" }]);
+                await sendAiAsBubbles("e ai curtiu? 😏");
               }
               setIsTyping(false);
             }, 2000);
@@ -182,9 +215,9 @@ const Index = () => {
             ? "o cara tentou te ligar por video chamada mas vc recusou. diga que chamada de video só no pack vip por 39,90 com 1000 videos"
             : "o cara tentou te ligar por voz mas vc recusou. diga que ligação só no pack vip por 39,90";
           const msg = await generateAiMessage(context);
-          setMessages((prev) => [...prev, { role: "assistant", content: msg }]);
+          await sendAiAsBubbles(msg);
         } catch {
-          setMessages((prev) => [...prev, { role: "assistant", content: "amor chamada só no pack vip 😏" }]);
+          await sendAiAsBubbles("amor chamada só no pack vip 😏");
         }
         setIsTyping(false);
       }, 2000);
@@ -227,9 +260,9 @@ const Index = () => {
           setIsTyping(true);
           try {
             const msg = await generateAiMessage("vc ligou pra ele mas ele nao atendeu. manda msg dizendo que tentou ligar");
-            setMessages((prev) => [...prev, { role: "assistant", content: msg }]);
+            await sendAiAsBubbles(msg);
           } catch {
-            setMessages((prev) => [...prev, { role: "assistant", content: "tentei te ligar amor 😢" }]);
+            await sendAiAsBubbles("tentei te ligar amor 😢");
           }
           setIsTyping(false);
         }, 1500);
@@ -275,9 +308,9 @@ const Index = () => {
       setIsTyping(true);
       try {
         const msg = await generateAiMessage("vc ligou pra ele mas ele recusou a chamada. manda msg perguntando pq nao atendeu");
-        setMessages((prev) => [...prev, { role: "assistant", content: msg }]);
+        await sendAiAsBubbles(msg);
       } catch {
-        setMessages((prev) => [...prev, { role: "assistant", content: "pq nao atendeu? 😢" }]);
+        await sendAiAsBubbles("pq nao atendeu? 😢");
       }
       setIsTyping(false);
     }, 1500);
@@ -301,9 +334,9 @@ const Index = () => {
       const waitMsg = await generateAiMessage(
         `o cara quer comprar o ${packType === "vip" ? "pack vip de 39,90" : "pack proibido de 19,90"}. diga que vai mandar o codigo pix pra ele, pede pra esperar`
       );
-      setMessages((prev) => [...prev, { role: "assistant", content: waitMsg }]);
+      await sendAiAsBubbles(waitMsg);
     } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "espera ai" }]);
+      await sendAiAsBubbles("espera ai");
     }
 
     try {
@@ -346,9 +379,9 @@ const Index = () => {
         setIsTyping(true);
         try {
           const followUp = await generateAiMessage("vc mandou o codigo pix pra ele. pede pra ele te mandar o comprovante quando pagar. NAO mande email, chave pix, link ou qualquer dado");
-          setMessages((prev) => [...prev, { role: "assistant", content: followUp }]);
+          await sendAiAsBubbles(followUp);
         } catch {
-          setMessages((prev) => [...prev, { role: "assistant", content: "me manda o comprovante quando pagar" }]);
+          await sendAiAsBubbles("me manda o comprovante quando pagar");
         }
         setIsTyping(false);
       }, 2000);
@@ -356,7 +389,7 @@ const Index = () => {
       setIsTyping(false);
       toast.error(e.message || "Erro ao gerar PIX");
       const errMsg = await generateAiMessage("deu erro ao gerar o pix, peça desculpa e diga pra tentar depois").catch(() => "deu erro amor tenta depois");
-      setMessages((prev) => [...prev, { role: "assistant", content: errMsg }]);
+      await sendAiAsBubbles(errMsg);
     }
   }, [generateAiMessage]);
 
@@ -368,9 +401,9 @@ const Index = () => {
     setIsTyping(true);
     try {
       const checkMsg = await generateAiMessage("o cara mandou o comprovante de pagamento. diga que vai verificar e pede pra esperar");
-      setMessages((prev) => [...prev, { role: "assistant", content: checkMsg }]);
+      await sendAiAsBubbles(checkMsg);
     } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "espera ai vou ver" }]);
+      await sendAiAsBubbles("espera ai vou ver");
     }
 
     await new Promise((r) => setTimeout(r, 1500));
@@ -383,19 +416,19 @@ const Index = () => {
       if (result.status === "PAID") {
         fbq('track', 'Purchase', { value: 19.90, currency: 'BRL' });
         const paidMsg = await generateAiMessage("o pagamento foi confirmado! comemora com ele e diz que vai ligar pra ele agora").catch(() => "confirmou bb vou te ligar");
-        setMessages((prev) => [...prev, { role: "assistant", content: paidMsg }]);
+        await sendAiAsBubbles(paidMsg);
 
         setTimeout(() => {
           setVideoCall(true);
         }, 2500);
       } else {
         const pendingMsg = await generateAiMessage("o pagamento ainda nao caiu. avisa ele e pede pra mandar o comprovante de novo quando pagar").catch(() => "ainda nao caiu amor");
-        setMessages((prev) => [...prev, { role: "assistant", content: pendingMsg }]);
+        await sendAiAsBubbles(pendingMsg);
       }
     } catch {
       setIsTyping(false);
       const errMsg = await generateAiMessage("nao conseguiu verificar o pagamento. pede desculpa e pede pra tentar dnv").catch(() => "nao consegui ver tenta dnv");
-      setMessages((prev) => [...prev, { role: "assistant", content: errMsg }]);
+      await sendAiAsBubbles(errMsg);
     }
   }, [currentTransactionId, generateAiMessage]);
 
@@ -498,9 +531,9 @@ const Index = () => {
           setTimeout(async () => {
             try {
               const callMsg = await generateAiMessage("vc ta gostando da conversa e quer ligar pra ele de video. pergunta se pode ligar, fala que quer mostrar algo especial");
-              setMessages((prev) => [...prev, { role: "assistant", content: callMsg }]);
+              await sendAiAsBubbles(callMsg);
             } catch {
-              setMessages((prev) => [...prev, { role: "assistant", content: "ei amor posso te ligar? quero te mostrar uma coisa 😏📹" }]);
+              await sendAiAsBubbles("ei amor posso te ligar?\nquero te mostrar uma coisa 😏");
             }
             setIsTyping(false);
             // Start incoming call after a delay
