@@ -60,6 +60,7 @@ const Index = () => {
   const incomingCallTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const incomingCallTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userMessageCountRef = useRef(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const callOfferedRef = useRef(false);
   const callDoneRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -116,17 +117,25 @@ const Index = () => {
     return bubbles.length > 0 ? bubbles : [text];
   };
 
-  const sendAiAsBubbles = useCallback(async (text: string) => {
+  const abortableSleep = (ms: number, signal: AbortSignal) =>
+    new Promise<void>((resolve, reject) => {
+      if (signal.aborted) return reject(new DOMException("Aborted", "AbortError"));
+      const t = setTimeout(resolve, ms);
+      signal.addEventListener("abort", () => { clearTimeout(t); reject(new DOMException("Aborted", "AbortError")); }, { once: true });
+    });
+
+  const sendAiAsBubbles = useCallback(async (text: string, signal?: AbortSignal) => {
     const bubbles = splitIntoBubbles(text);
     for (let i = 0; i < bubbles.length; i++) {
+      if (signal?.aborted) return;
       if (i > 0) {
         setIsTyping(true);
-        await new Promise((r) => setTimeout(r, 1500 + Math.random() * 2000));
+        try { await abortableSleep(1500 + Math.random() * 2000, signal!); } catch { setIsTyping(false); return; }
       }
       setIsTyping(false);
       setMessages((prev) => [...prev, { role: "assistant", content: bubbles[i] }]);
       if (i < bubbles.length - 1) {
-        await new Promise((r) => setTimeout(r, 150));
+        try { await abortableSleep(150, signal!); } catch { return; }
       }
     }
   }, []);
@@ -433,12 +442,21 @@ const Index = () => {
   }, [currentTransactionId, generateAiMessage]);
 
   const sendMessage = async (text: string, image?: string) => {
-    if ((!text.trim() && !image) || isLoading) return;
+    if ((!text.trim() && !image)) return;
+
+    // Abort any previous AI response in progress
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const signal = controller.signal;
 
     const userMsg: ChatMsg = { role: "user", content: text || "📷 Foto", image };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
+    setIsTyping(false);
     userMessageCountRef.current += 1;
 
     // If user sends an image and we have a pending transaction, verify payment
@@ -454,17 +472,17 @@ const Index = () => {
       content: image ? `[o usuário mandou uma foto dele/dela] ${text}`.trim() : text,
     }];
 
-    let assistantSoFar = "";
-
     try {
       // Delay realista antes de mostrar "digitando..."
       const readDelay = 800 + Math.random() * 2000;
-      await new Promise((r) => setTimeout(r, readDelay));
+      try { await abortableSleep(readDelay, signal); } catch { setIsLoading(false); return; }
+      if (signal.aborted) { setIsLoading(false); return; }
       setIsTyping(true);
 
       // Delay de digitação antes de responder
       const typingDelay = 1000 + Math.random() * 2500;
-      await new Promise((r) => setTimeout(r, typingDelay));
+      try { await abortableSleep(typingDelay, signal); } catch { setIsTyping(false); setIsLoading(false); return; }
+      if (signal.aborted) { setIsTyping(false); setIsLoading(false); return; }
 
       // Collect full response first
       let fullResponse = "";
@@ -473,6 +491,8 @@ const Index = () => {
         onDelta: (chunk) => { fullResponse += chunk; },
         onDone: () => {},
       });
+
+      if (signal.aborted) { setIsTyping(false); setIsLoading(false); return; }
 
       // Split response into multiple short messages
       const rawParts = fullResponse
@@ -487,7 +507,6 @@ const Index = () => {
         if (words.length <= 5) {
           parts.push(part);
         } else {
-          // Split into chunks of 3-4 words
           for (let j = 0; j < words.length; j += 4) {
             const chunk = words.slice(j, j + 4).join(" ");
             if (chunk.trim()) parts.push(chunk.trim());
@@ -497,17 +516,17 @@ const Index = () => {
 
       // Send each part as a separate message with realistic delays
       for (let i = 0; i < parts.length; i++) {
+        if (signal.aborted) { setIsTyping(false); setIsLoading(false); return; }
         if (i > 0) {
-          // Delay between messages: "read" pause + "typing" pause
           setIsTyping(true);
-          const betweenDelay = 600 + Math.random() * 1500;
-          await new Promise((r) => setTimeout(r, betweenDelay));
+          const betweenDelay = 1500 + Math.random() * 2000;
+          try { await abortableSleep(betweenDelay, signal); } catch { setIsTyping(false); setIsLoading(false); return; }
         }
+        if (signal.aborted) { setIsTyping(false); setIsLoading(false); return; }
         setIsTyping(false);
         setMessages((prev) => [...prev, { role: "assistant", content: parts[i] }]);
-        // Small pause to let the message render before next typing indicator
         if (i < parts.length - 1) {
-          await new Promise((r) => setTimeout(r, 200));
+          try { await abortableSleep(200, signal); } catch { setIsLoading(false); return; }
         }
       }
 
