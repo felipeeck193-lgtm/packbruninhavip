@@ -181,7 +181,7 @@ serve(async (req) => {
       const isGreeting = /^(oi+|ol[aá]|eai|e ai|fala|salve|hey|hi|hello|opa|oie|yo)[\s!?.😏😘🥰]*$/i.test(lastUserMsg.trim());
       if (isGreeting) {
         finalMessages.push(...messages);
-        finalMessages.push({ role: "system", content: "[SISTEMA: VOCÊ JÁ MANDOU OI PRIMEIRO. NÃO cumprimente de volta. NÃO diga oi, oie, oii, olá ou qualquer saudação. Responda com algo DIFERENTE como: 'e ai amor', 'tudo bb?', 'sumido hein', 'demorou gato', 'fala lindo', 'apareceu'. PROIBIDO repetir saudação.]" });
+        finalMessages.push({ role: "system", content: "[SISTEMA: VOCÊ JÁ MANDOU OI PRIMEIRO. NÃO cumprimente de volta. NÃO diga oi, oie, oii, olá ou qualquer saudação. NÃO finja que já conhece ele — nada de 'saudade', 'sumido', 'apareceu'. Vocês acabaram de se conhecer. Responda com curiosidade tipo: 'e ai tudo bem?', 'como ce ta?', 'qual teu nome gato?'. Seja simpática mas como alguém que ACABOU de conhecer.]" });
       } else {
         finalMessages.push(...messages);
       }
